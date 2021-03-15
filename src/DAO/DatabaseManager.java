@@ -1,3 +1,5 @@
+package DAO;
+
 import pojo.Album;
 
 import java.sql.*;
