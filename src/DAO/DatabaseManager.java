@@ -3,19 +3,20 @@ package DAO;
 import pojo.Album;
 
 import javax.sql.rowset.serial.SerialBlob;
+import java.io.Serializable;
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class DatabaseManager {
+public class DatabaseManager implements Serializable {
     private final String host = "remotemysql.com";
     private final int portNum = 3306;
     private final String uri = host + ":" + portNum;
     private final String username = "6lTdvKVhWe";
     private final String password = "gW9fmOuSij";
-    private static DatabaseManager databaseManagerInstance = new DatabaseManager();
+    private static DatabaseManager databaseManagerInstance;
     private Connection connection = null;
     public enum OperationType {
         INSERT,
@@ -29,6 +30,7 @@ public class DatabaseManager {
      * This class is a singleton and is responsible for querying and updating the database.
      */
     private DatabaseManager() {
+
         try {
             Class.forName("com.mysql.jdbc.Driver");
         } catch (ClassNotFoundException e) {
@@ -57,10 +59,15 @@ public class DatabaseManager {
 
     }
 
+
+
     public static DatabaseManager getInstance() {
+
+        if(databaseManagerInstance == null)
+            databaseManagerInstance = new DatabaseManager();
+
         return databaseManagerInstance;
     }
-
     public pojo.LogEntry getLogEntry(int logID) {
         if (connection == null) {
             return null;
