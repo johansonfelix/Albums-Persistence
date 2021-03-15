@@ -13,9 +13,11 @@ import java.util.Date;
 public class DatabaseManager implements Serializable {
     private final String host = "remotemysql.com";
     private final int portNum = 3306;
-    private final String uri = host + ":" + portNum;
+    private final String database = "6lTdvKVhWe";
+    private final String uri = host + ":" + portNum+"/"+database;
     private final String username = "6lTdvKVhWe";
     private final String password = "gW9fmOuSij";
+
     private static DatabaseManager databaseManagerInstance;
     private Connection connection = null;
     public enum OperationType {
@@ -32,7 +34,7 @@ public class DatabaseManager implements Serializable {
     private DatabaseManager() {
 
         try {
-            Class.forName("com.mysql.jdbc.Driver");
+            Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
             System.out.println("Where is your MySQL JDBC Driver?");
             e.printStackTrace();
@@ -40,7 +42,6 @@ public class DatabaseManager implements Serializable {
         }
 
         System.out.println("MySQL JDBC Driver Registered!");
-
         try {
             connection = DriverManager
                     .getConnection("jdbc:mysql://" + uri, username, password);
@@ -141,11 +142,11 @@ public class DatabaseManager implements Serializable {
                 pojo.Album album = new pojo.Album();
                 album.setISRC(results.getString("ISRC"));
                 album.setDescription(results.getString("Description"));
-                album.setTitle(results.getString("Ttile"));
-                album.setReleaseYear(results.getString("Release-Year"));
-                album.setArtistFirstName(results.getString("Artist-First-Name"));
-                album.setArtistLastName(results.getString("Artist-Last-Name"));
-                Blob blob  = results.getBlob("Cover-Image");
+                album.setTitle(results.getString("Title"));
+                album.setReleaseYear(results.getString("Release_Year"));
+                album.setArtistFirstName(results.getString("Artist_First_Name"));
+                album.setArtistLastName(results.getString("Artist_Last_Name"));
+                Blob blob  = results.getBlob("Cover_Image");
                 int blobLength = (int)blob.length();
                 byte[] blobAsBytes = blob.getBytes(1,blobLength);
                 album.setCover_img(blobAsBytes);
@@ -222,11 +223,13 @@ public class DatabaseManager implements Serializable {
 
             for (int i = 0; i < values.length; i++) {
                 if (values[i] instanceof String) {
+
                     stmt.setString(i + 1, (String) values[i]);
                 } else if (values[i] instanceof SerialBlob) {
                     stmt.setBlob(i + 1, (SerialBlob) values[i]);
                 }
             }
+            System.out.println(stmt.toString());
             return stmt.executeUpdate();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
