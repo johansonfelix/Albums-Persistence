@@ -1,3 +1,5 @@
+package DAO;
+
 import pojo.Album;
 
 import javax.sql.rowset.serial.SerialBlob;
