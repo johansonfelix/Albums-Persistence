@@ -19,7 +19,7 @@ public class DatabaseManager {
         INSERT,
         UPDATE
     }
-    private String idColName = "id", timestampColName = "Timestamp", typeOfChangeColName = "Type of change", ISRCColName = "ISRC";
+    private String idColName = "id", timestampColName = "TStamp", typeOfChangeColName = "Type of change", ISRCColName = "ISRC";
     private String tableName = "LogEntries";
 
     /**
@@ -72,11 +72,13 @@ public class DatabaseManager {
             } else return entries.get(0);
         }
     }
-
+    public boolean haveConnection(){
+        System.out.println("Performing database operation. ");
+        System.out.println("CHECK: | Connected to database? " + (connection != null));
+        return connection != null;
+    }
     public ArrayList<pojo.LogEntry> getAllLogEntries() {
-        if (connection == null) {
-            return null;
-        } else {
+        if(haveConnection()){
             String query = "SELECT * FROM LogEntries";
             ResultSet results = executeQuery(query);
             ArrayList<pojo.LogEntry> entries = getLogEntriesFromResultSet(results);
@@ -85,14 +87,12 @@ public class DatabaseManager {
                 return null;
             } else return entries;
         }
+        return null;
     }
 
     public Album getAlbum(String ISRC) {
         System.out.println("Retrieving album with ISRC " + ISRC);
-        if (connection == null) {
-            System.out.println("No connection. Aborting");
-            return null;
-        } else {
+        if(haveConnection()){
             String query = "SELECT * FROM Albums WHERE ISRC=" + ISRC;
             ResultSet results = executeQuery(query);
             ArrayList<Album> albums = getAlbumsFromResultSet(results);
@@ -104,14 +104,12 @@ public class DatabaseManager {
                 return albums.get(0);
             }
         }
+        return null;
     }
 
     public ArrayList<Album> getAllAlbums() {
         System.out.println("Retrieving all albums");
-        if (connection == null) {
-            System.out.println("No connection. Aborting");
-            return null;
-        } else {
+        if (haveConnection()) {
             String query = "SELECT * FROM Albums";
             ResultSet results = executeQuery(query);
             ArrayList<Album> albums = getAlbumsFromResultSet(results);
@@ -123,12 +121,16 @@ public class DatabaseManager {
                 return albums;
             }
         }
+        return null;
     }
 
     private ArrayList<Album> getAlbumsFromResultSet(ResultSet results) {
         ArrayList<pojo.Album> albums = new ArrayList<>();
+        System.out.println("Getting albums from result set..");
+        int numAlbums = 0;
         try {
             while (results.next()) {
+                System.out.println("Fetching next result: " + results.toString());
                 pojo.Album album = new pojo.Album();
                 album.setISRC(results.getString("ISRC"));
                 album.setDescription(results.getString("Description"));
@@ -141,18 +143,23 @@ public class DatabaseManager {
                 byte[] blobAsBytes = blob.getBytes(1,blobLength);
                 album.setCover_img(blobAsBytes);
                 albums.add(album);
+                numAlbums++;
             }
 
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
+        System.out.println("Finished fetching albums. total entries: " + numAlbums);
         return albums;
     }
 
     private ArrayList<pojo.LogEntry> getLogEntriesFromResultSet(ResultSet results) {
+        System.out.println("Getting log entries from the result set..");
         ArrayList<pojo.LogEntry> logEntries = new ArrayList<>();
+        int numLogEntries = 0;
         try {
             while (results.next()) {
+                System.out.println("Fetched next result: " + results.toString());
                 pojo.LogEntry logEntry = new pojo.LogEntry();
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
                 Date parsedDate = dateFormat.parse(results.getString(timestampColName));
@@ -161,17 +168,19 @@ public class DatabaseManager {
                 logEntry.setT(pojo.LogEntry.stringToTypeOfChange(results.getString(typeOfChangeColName)));
                 logEntry.setISRC(results.getString(ISRCColName));
                 logEntries.add(logEntry);
+                numLogEntries++;
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         } catch (ParseException e) {
             e.printStackTrace();
         }
+        System.out.println("Finished fetching log entries. Total entries: " + numLogEntries);
         return logEntries;
     }
 
     private ResultSet executeQuery(String query) {
-        System.out.println("Executing query: " + query);
+        System.out.println("Executing query: \n" + query);
         try {
             Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(query);
@@ -182,63 +191,76 @@ public class DatabaseManager {
         }
         return null;
     }
+
     private int insertOrUpdate(OperationType operation, String tableName, String[] colNames, Object[] values) {
-        if (connection == null) {
-            return -5;
-        }
-        try {
-            String colNamesPart = "";
-            String colValuesPart = "";
-            for (int i = 0; i < colNames.length; i++) {
-                colNamesPart += colNames[i];
-                colValuesPart += "?";
-                if (i + 1 < colNames.length) {
-                    colNamesPart += ",";
-                    colValuesPart += ",";
-                }
-            }
-            String sql = "";
-            if (operation == OperationType.INSERT) {
-                sql = "INSERT INTO " + tableName + " (" + colNamesPart + ") VALUES (" + colValuesPart + ")";
-            } else if (operation == OperationType.UPDATE) {
-                sql = "UPDATE " + tableName + " SET ";
+        System.out.println("Called insertOrUpdate function");
+        if(haveConnection()) {
+            try {
+                System.out.println("Constructing statement...");
+                String colNamesPart = "";
+                String colValuesPart = "";
                 for (int i = 0; i < colNames.length; i++) {
-                    sql += colNames[i] + "=?";
+                    colNamesPart += colNames[i];
+                    colValuesPart += "?";
                     if (i + 1 < colNames.length) {
-                        sql += ",";
+                        colNamesPart += ",";
+                        colValuesPart += ",";
                     }
                 }
-            }
-            PreparedStatement stmt = connection.prepareStatement(sql);
+                String sql = "";
 
-            for (int i = 0; i < values.length; i++) {
-                if (values[i] instanceof String) {
-                    stmt.setString(i + 1, (String) values[i]);
-                } else if (values[i] instanceof SerialBlob) {
-                    stmt.setBlob(i + 1, (SerialBlob) values[i]);
+                if (operation == OperationType.INSERT) {
+                    sql = "INSERT INTO " + tableName + " (" + colNamesPart + ") VALUES (" + colValuesPart + ")";
+                } else if (operation == OperationType.UPDATE) {
+                    sql = "UPDATE " + tableName + " SET ";
+                    for (int i = 0; i < colNames.length; i++) {
+                        sql += colNames[i] + "=?";
+                        if (i + 1 < colNames.length) {
+                            sql += ",";
+                        }
+                    }
                 }
+                System.out.println("Statement to be executed:");
+                System.out.println(sql);
+                PreparedStatement stmt = connection.prepareStatement(sql);
+                for (int i = 0; i < values.length; i++) {
+                    if (values[i] instanceof String) {
+                        stmt.setString(i + 1, (String) values[i]);
+                    } else if (values[i] instanceof SerialBlob) {
+                        stmt.setBlob(i + 1, (SerialBlob) values[i]);
+                    }
+                }
+                System.out.println("Executing statement..");
+                int rowsAffected = stmt.executeUpdate();
+                System.out.println("Statement executed. Rows affected: " + rowsAffected);
+                return rowsAffected;
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
             }
-            return stmt.executeUpdate();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
         }
         return -1;
     }
 
     private int delete(String tableName, String primaryKeyColName, Object primaryKeyValue) {
-        String whereClauseRHS = "";
-        if (primaryKeyValue instanceof Integer) {
-            whereClauseRHS = ((Integer) primaryKeyValue).toString();
-        } else if (primaryKeyValue instanceof String) {
-            whereClauseRHS = (String) primaryKeyValue;
-        }
-        try {
-            PreparedStatement stmt = connection.prepareStatement("DELETE FROM " + tableName + " WHERE " + primaryKeyColName + "=" + whereClauseRHS);
-            return stmt.executeUpdate();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        if(haveConnection()) {
+            System.out.println("Deleting from " + tableName + "  where the column is " + primaryKeyColName + " and value looking for is " + primaryKeyColName);
+            String whereClauseRHS = "";
+            if (primaryKeyValue instanceof Integer) {
+                System.out.println("The primary key is of type integer.");
+                whereClauseRHS = ((Integer) primaryKeyValue).toString();
+            } else if (primaryKeyValue instanceof String) {
+                System.out.println("The primary key is of type String");
+                whereClauseRHS = (String) primaryKeyValue;
+            }
+            try {
+                String sql = "DELETE FROM " + tableName + " WHERE " + primaryKeyColName + "=" + whereClauseRHS;
+                System.out.println("Executing update: \n" + sql);
+                PreparedStatement stmt = connection.prepareStatement(sql);
+                return stmt.executeUpdate();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
         }
         return -1;
     }
 }
-
