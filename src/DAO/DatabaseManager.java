@@ -10,11 +10,11 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class DatabaseManager {
-    private final String host = "localhost";
+    private final String host = "remotemysql.com";
     private final int portNum = 3306;
     private final String uri = host + ":" + portNum;
-    private final String username = "root";
-    private final String password = "";
+    private final String username = "6lTdvKVhWe";
+    private final String password = "gW9fmOuSij";
     private static DatabaseManager databaseManagerInstance = new DatabaseManager();
     private Connection connection = null;
     public enum OperationType {
