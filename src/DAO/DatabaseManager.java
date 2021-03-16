@@ -1,20 +1,22 @@
 package DAO;
 
 import pojo.Album;
+import pojo.CoverImage;
 
 import javax.sql.rowset.serial.SerialBlob;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.Date;
 
 public class DatabaseManager implements Serializable {
     private final String host = "remotemysql.com";
     private final int portNum = 3306;
     private final String database = "6lTdvKVhWe";
-    private final String uri = host + ":" + portNum+"/"+database;
+    private final String uri = host + ":" + portNum+"/"+database+"?autoReconnect=true";
     private final String username = "6lTdvKVhWe";
     private final String password = "gW9fmOuSij";
 
@@ -116,6 +118,58 @@ public class DatabaseManager implements Serializable {
         }
     }
 
+    public CoverImage getAlbumCoverImage(String ISRC){
+        System.out.println("Retrieving album cover image with ISRC " + ISRC);
+        if (connection == null) {
+            System.out.println("No connection. Aborting");
+            return null;
+        } else {
+            String query = "SELECT Cover_Image, MIME FROM Albums WHERE ISRC=" + ISRC;
+            ResultSet results = executeQuery(query);
+            ArrayList <CoverImage> covers = getAlbumCoverFromResultSet(results);
+            if (covers.size() == 0) {
+            System.out.println("There are no albums.");
+                return null;
+            } else {
+                System.out.println("Found album: " + covers.get(0));
+                return covers.get(0);
+            }
+        }
+    }
+
+    private ArrayList<CoverImage> getAlbumCoverFromResultSet(ResultSet results) {
+
+        ArrayList<CoverImage> coverImages = new ArrayList<>();
+        try {
+            while (results.next()) {
+                CoverImage coverImage = new CoverImage();
+                String mimeType = results.getString("MIME");
+                Blob blob = results.getBlob("Cover_Image");
+                if (blob != null) {
+                    int blobLength = (int) blob.length();
+                    byte[] blobAsBytes = blob.getBytes(1, blobLength);
+                    String base64Attachment = Base64.getEncoder().encodeToString(blobAsBytes);
+                    coverImage.setBase64atatchment(base64Attachment);
+                    coverImage.setMimeType(mimeType);
+
+                } else {
+                    coverImage.setBase64atatchment(null);
+                    coverImage.setMimeType(null);
+                }
+
+                coverImages.add(coverImage);
+            }
+
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return coverImages;
+    }
+
+
+
+
     public ArrayList<Album> getAllAlbums() {
         System.out.println("Retrieving all albums");
         if (connection == null) {
@@ -135,6 +189,8 @@ public class DatabaseManager implements Serializable {
         }
     }
 
+
+
     private ArrayList<Album> getAlbumsFromResultSet(ResultSet results) {
         ArrayList<pojo.Album> albums = new ArrayList<>();
         try {
@@ -146,10 +202,22 @@ public class DatabaseManager implements Serializable {
                 album.setReleaseYear(results.getString("Release_Year"));
                 album.setArtistFirstName(results.getString("Artist_First_Name"));
                 album.setArtistLastName(results.getString("Artist_Last_Name"));
+                String mimeType = results.getString("MIME");
                 Blob blob  = results.getBlob("Cover_Image");
-                int blobLength = (int)blob.length();
-                byte[] blobAsBytes = blob.getBytes(1,blobLength);
-                album.setCover_img(blobAsBytes);
+                CoverImage coverImage = new CoverImage();
+                if (blob!=null) {
+                    int blobLength = (int) blob.length();
+                    byte[] blobAsBytes = blob.getBytes(1, blobLength);
+                    String base64Attachment = Base64.getEncoder().encodeToString(blobAsBytes);
+                    coverImage.setBase64atatchment(base64Attachment);
+                    coverImage.setMimeType(mimeType);
+
+                }
+                else {
+                    coverImage.setBase64atatchment(null);
+                    coverImage.setMimeType(null);
+                }
+                album.setCoverImage(coverImage);
                 albums.add(album);
             }
 
@@ -225,10 +293,23 @@ public class DatabaseManager implements Serializable {
                 if (values[i] instanceof String) {
 
                     stmt.setString(i + 1, (String) values[i]);
-                } else if (values[i] instanceof SerialBlob) {
+                } /*else if (values[i] instanceof SerialBlob) {
                     stmt.setBlob(i + 1, (SerialBlob) values[i]);
+                }*/
+            }
+
+            if(tableName.equals("Albums")){
+                if(values[6]!=null){
+                    String base64Attachment = (String) values[6];
+                    stmt.setBlob(7, new SerialBlob(Base64.getDecoder().decode(base64Attachment)));
+                    stmt.setString(8, (String) values[7]);
+                }
+                else{
+                    stmt.setNull(7, Types.BLOB);
+                    stmt.setNull(8, Types.LONGVARCHAR);
                 }
             }
+
             System.out.println(stmt.toString());
             return stmt.executeUpdate();
         } catch (SQLException throwables) {
