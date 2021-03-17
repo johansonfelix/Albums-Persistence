@@ -4,6 +4,8 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../Albums-Core/Albums-Core.iml" filepath="$PROJECT_DIR$/../Albums-Core/Albums-Core.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/Albums-Persistence.iml" filepath="$PROJECT_DIR$/.idea/Albums-Persistence.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Albums-Repository/Albums-Repository.iml" filepath="$PROJECT_DIR$/../Albums-Repository/Albums-Repository.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Albums-Service/Albums-Service.iml" filepath="$PROJECT_DIR$/../Albums-Service/Albums-Service.iml" />
     </modules>
   </component>
 </project>

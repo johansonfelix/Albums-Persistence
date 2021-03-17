@@ -6,11 +6,17 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="Albums-Persistence" />
+        <module name="Albums-Repository" />
+        <module name="Albums-Service" />
         <module name="Albums-Core" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="Albums-Core" target="15" />
+      <module name="Albums-Core" target="1.8" />
+      <module name="Albums-Persistence" target="1.8" />
+      <module name="Albums-Repository" target="8" />
+      <module name="Albums-Service" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>
