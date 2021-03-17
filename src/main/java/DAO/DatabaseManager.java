@@ -106,7 +106,7 @@ public class DatabaseManager implements Serializable {
             System.out.println("No connection. Aborting");
             return null;
         } else {
-            String query = "SELECT * FROM Albums WHERE ISRC=" + ISRC;
+            String query = "SELECT * FROM Albums WHERE ISRC=\"" + ISRC + "\"";
             ResultSet results = executeQuery(query);
             ArrayList<Album> albums = getAlbumsFromResultSet(results);
             if (albums.size() == 0) {
@@ -324,7 +324,7 @@ public class DatabaseManager implements Serializable {
         if (primaryKeyValue instanceof Integer) {
             whereClauseRHS = ((Integer) primaryKeyValue).toString();
         } else if (primaryKeyValue instanceof String) {
-            whereClauseRHS = (String) primaryKeyValue;
+            whereClauseRHS = "\"" + (String) primaryKeyValue + "\"";
         }
         try {
             PreparedStatement stmt = connection.prepareStatement("DELETE FROM " + tableName + " WHERE " + primaryKeyColName + "=" + whereClauseRHS);
