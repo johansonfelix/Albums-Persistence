@@ -26,7 +26,7 @@ public class DatabaseManager implements Serializable {
         INSERT,
         UPDATE
     }
-    private String idColName = "id", timestampColName = "Timestamp", typeOfChangeColName = "Type of change", ISRCColName = "ISRC";
+    private String idColName = "ID", timestampColName = "TStamp", typeOfChangeColName = "Type_of_change", ISRCColName = "ISRC";
     private String tableName = "LogEntries";
 
     /**
@@ -47,6 +47,7 @@ public class DatabaseManager implements Serializable {
         try {
             connection = DriverManager
                     .getConnection("jdbc:mysql://" + uri, username, password);
+
 
         } catch (SQLException e) {
             System.out.println("Connection Failed! Check output console");
@@ -232,7 +233,7 @@ public class DatabaseManager implements Serializable {
         try {
             while (results.next()) {
                 pojo.LogEntry logEntry = new pojo.LogEntry();
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.SSS");
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
                 Date parsedDate = dateFormat.parse(results.getString(timestampColName));
                 logEntry.setId(results.getInt("ID"));
                 logEntry.setTimestamp(new Timestamp(parsedDate.getTime()));
