@@ -287,6 +287,7 @@ public class DatabaseManager implements Serializable {
                         sql += ",";
                     }
                 }
+                sql += " WHERE ISRC=\"" + (String)values[0] + "\"";
             }
             PreparedStatement stmt = connection.prepareStatement(sql);
 
@@ -300,14 +301,24 @@ public class DatabaseManager implements Serializable {
             }
 
             if(tableName.equals("Albums")){
-                if(values[6]!=null){
-                    String base64Attachment = (String) values[6];
-                    stmt.setBlob(7, new SerialBlob(Base64.getDecoder().decode(base64Attachment)));
-                    stmt.setString(8, (String) values[7]);
+                boolean imageNull = false;
+                int imageIndex = 0;
+                for(int i = 0; i < colNames.length; i++) {
+                    if(colNames[i].equals("Cover_Image")){
+                        imageIndex = i;
+                        if((String)values[i] == null){
+                            imageNull = true;
+                        }
+                    }
+                }
+                if(!imageNull){
+                    String base64Attachment = (String) values[imageIndex];
+                    stmt.setBlob(imageIndex + 1, new SerialBlob(Base64.getDecoder().decode(base64Attachment)));
+                    stmt.setString(imageIndex + 2, (String) values[imageIndex+1]);
                 }
                 else{
-                    stmt.setNull(7, Types.BLOB);
-                    stmt.setNull(8, Types.LONGVARCHAR);
+                    stmt.setNull(imageIndex + 1, Types.BLOB);
+                    stmt.setNull(imageIndex + 2, Types.LONGVARCHAR);
                 }
             }
 

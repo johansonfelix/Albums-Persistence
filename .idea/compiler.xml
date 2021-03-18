@@ -7,8 +7,8 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="Albums-Persistence" />
+        <module name="rest" />
         <module name="Albums-Repository" />
-        <module name="Albums-Service" />
         <module name="Albums-Core" />
       </profile>
     </annotationProcessing>
@@ -17,6 +17,7 @@
       <module name="Albums-Persistence" target="1.8" />
       <module name="Albums-Repository" target="8" />
       <module name="Albums-Service" target="1.8" />
+      <module name="rest" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>
