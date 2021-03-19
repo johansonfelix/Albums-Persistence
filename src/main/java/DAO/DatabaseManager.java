@@ -236,9 +236,9 @@ public class DatabaseManager implements Serializable {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
                 Date parsedDate = dateFormat.parse(results.getString(timestampColName));
                 logEntry.setId(results.getInt("ID"));
-                logEntry.setTimestamp(new Timestamp(parsedDate.getTime()));
                 logEntry.setT(pojo.LogEntry.stringToTypeOfChange(results.getString(typeOfChangeColName)));
                 logEntry.setISRC(results.getString(ISRCColName));
+                logEntry.setTimestampString(new Timestamp(parsedDate.getTime()).toString());
                 logEntries.add(logEntry);
             }
         } catch (SQLException throwables) {
